@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JS Bin</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<form enctype="multipart/form-data" method="post" id="fileinfo">
+<input type="file" id="archivos" name="archivos[]" multiple onchange="readImagesAndPreview(this.files);"><p>
+<input type="file" id="archivos2" name="archivos2" multiple onchange="readImagesAndPreview(this.files);"><p>
+<input type="hidden" name="MAX_FILE_SIZE" value="300000" />
+<input type="button" value="Enviar" onclick="presionar()" />
+</form>
+  <div id="thumbnails"></div>
+  <div id="log"></div>
+  <script>
+    var container = document.getElementById("thumbnails");
+    
+    function readImagesAndPreview(files) {
+      for(var i=0; i < files.length; i++) {
+         var f = files[i];         
+         var reader = new FileReader();
+        
+         reader.onload = function(e) {
+           var img = document.createElement("img");
+           img.src = e.target.result;
+           img.width = 100;
+           img.height = 100;
+           container.appendChild(img);
+        }
+      
+        reader.readAsDataURL(f);
+      }
+    }
+	
+	function presionar() {
+	    var fd = new FormData(document.getElementById('fileinfo'));
+		var request = $.ajax({
+		    url: "cargar.php",
+            method: "POST",			
+            data: fd,
+			cache: false,
+            processData: false,  
+            contentType: false,
+			success: function(data) {
+			    
+			},
+			error: function() {
+			    alert('Ha ocurrido un error');
+			}
+        });
+        request.done(function( msg ) {
+		    var json = JSON.stringify(msg)
+		    $( "#log" ).html( json );
+		});
+	}
+    
+  </script>
+</body>
+</html>
