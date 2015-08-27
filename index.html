@@ -6,10 +6,11 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 </head>
 <body>
+<!-- TODO: Se necesita asegurar que el formulario no intenta cargar más archivos que max_file_uploads en una petición. 	 -->
 <form enctype="multipart/form-data" method="post" id="fileinfo">
+<input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
 <input type="file" id="archivos" name="archivos[]" multiple onchange="readImagesAndPreview(this.files);"><p>
 <input type="file" id="archivos2" name="archivos2" multiple onchange="readImagesAndPreview(this.files);"><p>
-<input type="hidden" name="MAX_FILE_SIZE" value="300000" />
 <input type="button" value="Enviar" onclick="presionar()" />
 </form>
   <div id="thumbnails"></div>

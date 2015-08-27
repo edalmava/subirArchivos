@@ -6,6 +6,8 @@
 	require('lib/cargar_archivo.php');
 	
 	try {
+		/*$cargar = new CargarArchivo("archivos", 1, 100, 'jpg', '0');
+		if($result = $cargar->cargarArray()) {*/
 		$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg', '0');
 		if($result = $cargar->cargarSimple()) {
 			//$success = json_decode($result);
