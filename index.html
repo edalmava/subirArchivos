@@ -7,6 +7,7 @@
 </head>
 <body>
 <!-- TODO: Se necesita asegurar que el formulario no intenta cargar más archivos que max_file_uploads en una petición. 	 -->
+<!-- TODO: Drag and Drop - https://developer.mozilla.org/es/docs/Using_files_from_web_applications --> 
 <form enctype="multipart/form-data" method="post" id="fileinfo">
 <input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
 <input type="file" id="archivos" name="archivos[]" multiple onchange="readImagesAndPreview(this.files);"><p>
