@@ -11,6 +11,9 @@
 		private $ext;
 		private $overwrite;
 		private $uploaddir = '../uploads/';
+		private $errors;
+		private $success;
+		
 		// Media Types
 		// http://www.iana.org/assignments/media-types/media-types.xhtml#application
 		private $ext_permitidas = array('avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
@@ -81,21 +84,31 @@
 				case UPLOAD_ERR_OK:
 					break;
 				case UPLOAD_ERR_NO_FILE:
-					throw new RuntimeException('No se ha enviado ningún archivo');
+					//throw new RuntimeException('No se ha enviado ningún archivo');
+					$this->errors[] = 'No se ha enviado ningún archivo.';
+					return false;
 				case UPLOAD_ERR_INI_SIZE:
 				case UPLOAD_ERR_FORM_SIZE:
-					throw new RuntimeException('Tamaño del archivo excede el límite.');
+					//throw new RuntimeException('Tamaño del archivo excede el límite.');
+					$this->errors[] = 'Tamaño del archivo excede el límite.';
+					return false;
 				case UPLOAD_ERR_PARTIAL:
-				    throw new RuntimeException('El archivo subido fue sólo parcialmente cargado.');
+				    //throw new RuntimeException('El archivo subido fue sólo parcialmente cargado.');
+					$this->errors[] = 'El archivo subido fue sólo parcialmente cargado.';
+					return false;
 				default:
-					throw new RuntimeException('Error desconocido.');
+					//throw new RuntimeException('Error desconocido.');
+					$this->errors[] = 'Error desconocido.';
+					return false;
 			}
 			return true;
 		}
 		
 		function checkSizeMax($fileSize) {
 			if ($fileSize > ($this->size * 1024)) {
-				throw new RuntimeException('Tamaño del archivo excede el límite.');
+				//throw new RuntimeException('Tamaño del archivo excede el límite.');
+				$this->errors[] = 'Tamaño del archivo excede el límite.';
+				return false;
 			} else {
 				return true;
 			}
@@ -121,7 +134,9 @@
             if (in_array($finfo->file($fileTmp), $keys)) {
 				return $tipos[$finfo->file($fileTmp)];
             } else {
-				throw new RuntimeException('Formato de archivo inválido.');
+				//throw new RuntimeException('Formato de archivo inválido.');
+				$this->errors[] = 'Formato de archivo inválido.';
+				return false;
             }										
 		}
 
@@ -154,9 +169,13 @@
 				$nombre = sprintf('%s.%s', sha1($_FILES[$this->file]['tmp_name'] . date('YmdHis')), $ext);
 			}
 			if (!move_uploaded_file($_FILES[$this->file]['tmp_name'], sprintf('%s%s', $this->uploaddir, $nombre))) {
-				throw new RuntimeException('Fallo al mover el archivo subido.');
+				//throw new RuntimeException('Fallo al mover el archivo subido.');
+				$this->errors[] = 'Fallo al mover el archivo subido.';
+				return false;
 			} else {
-				return json_encode(array("success" => "Archivo fue subido exitosamente.", "nombre" => $nombre));
+				//return json_encode(array("success" => "Archivo fue subido exitosamente.", "nombre" => $nombre));
+				$this->success = array("success" => "Archivo fue subido exitosamente.", "nombre" => $nombre);
+				return true;
 			}
 		}
 		
@@ -168,34 +187,46 @@
 					$nombre = sprintf('%s.%s', sha1($name . date('YmdHis')), $exts[$key]);
 				}
 				if (!move_uploaded_file($name, sprintf('%s%s', $this->uploaddir, $nombre))) {
-					throw new RuntimeException('Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key]);
+					//throw new RuntimeException('Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key]);
+					$this->errors[] = 'Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key];
+					//$this->eliminarArchivos();
+					return false;
 				} 
 				$nombres[$key] = $nombre;
 			}
-			return json_encode(array("success" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres));
+			$this->success = array("success" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres);
+			return true;
 		}
 		
-		function cargar() {
-			try {				
-				$this->verificarPropiedades();
-				$finfo = new finfo(FILEINFO_MIME_TYPE);
-				if ($this->isSimple()) {
-					if ($this->checkError($_FILES[$this->file]['error']) && $this->checkSizeMax($_FILES[$this->file]['size']) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'])) {						
-						return $this->subirArchivo($ext);
-					} 
-				} else if ($this->isArray()) {
-                    $exts = array();					
-                    foreach ($_FILES[$this->file]['error'] as $key => $error) {
-						if ($this->checkError($_FILES[$this->file]['error'][$key]) && $this->checkSizeMax($_FILES[$this->file]['size'][$key]) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'][$key])) {						
-							$exts[$key] = $ext;
-						} 
+		function cargar() {						
+			$this->verificarPropiedades();
+			$finfo = new finfo(FILEINFO_MIME_TYPE);
+			if ($this->isSimple()) {
+				if ($this->checkError($_FILES[$this->file]['error']) && $this->checkSizeMax($_FILES[$this->file]['size']) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'])) {						
+					if ($this->subirArchivo($ext)) {
+						return $this->success;
+					} else {
+						return $this->errors;
 					}
-					return $this->subidaMultiple($exts);					
 				} else {
-					throw new RuntimeException('Error al cargar: Parametros inválidos');
+					return $this->errors;
 				}
-			} catch(RuntimeException $e) {
-				return json_encode(array("error" => $e->getMessage()));
-			}
+			} else if ($this->isArray()) {
+				$exts = array();					
+				foreach ($_FILES[$this->file]['error'] as $key => $error) {
+					if ($this->checkError($_FILES[$this->file]['error'][$key]) && $this->checkSizeMax($_FILES[$this->file]['size'][$key]) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'][$key])) {						
+						$exts[$key] = $ext;
+					} else {
+						return $this->errors;
+                    }						
+				}
+				if ($this->subidaMultiple($exts)) {
+					return $this->success;
+                } else {
+					return $this->errors;
+                }					
+			} else {
+				throw new RuntimeException('Error al cargar: Parametros inválidos');
+			}			
 		}  
 	}

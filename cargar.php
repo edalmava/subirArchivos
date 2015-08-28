@@ -6,15 +6,10 @@
 	require('lib/cargar_archivo.php');
 	
 	try {
-		$cargar = new CargarArchivo("archivos", 1, 100, 'jpg', '0');
-		if($result = $cargar->cargar()) {
-		/*$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');
-		if($result = $cargar->cargar()) {*/
-			//$success = json_decode($result);
-			//echo $success->nombre;
-			//var_dump($success);
-			echo $result;
-		} 
+		$cargar = new CargarArchivo("archivos", 1, 100, 'jpg', '0');		
+		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');
+		//echo json_encode($cargar->cargar());						
+		var_dump($cargar->cargar());
 	} catch (RuntimeException $e) {
-		echo json_encode(array("error" => $e->getMessage()));
+		echo json_encode(array("errors" => $e->getMessage()));
 	}
