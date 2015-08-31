@@ -297,10 +297,10 @@
 		}
 		
 		public function getErrors() {
-			return json_encode(array("errors" => $this->errors));
+			return $this->errors;
 		}
 		
 		public function getSuccess() {
-			return json_encode(array("success" => $this->success));
+			return $this->success;
 		}		
 	}
