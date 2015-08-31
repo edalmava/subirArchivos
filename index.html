@@ -53,8 +53,12 @@
 			}
         });
         request.done(function( msg ) {
-		    //var json = JSON.stringify(msg)
-		    $( "#log" ).html( msg );
+		    if (msg.errors) {
+			    $('#log').html(msg.errors);
+			} 
+			if (msg.success) {
+			    $('#log').html(msg.success.msg);
+			}
 		});
 	}
     

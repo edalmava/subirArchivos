@@ -7,9 +7,16 @@
 	
 	try {
 		$cargar = new CargarArchivo("archivos", 1, 100, 'jpg', '0');		
-		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');
-		//echo json_encode($cargar->cargar());						
-		var_dump($cargar->cargar());
+		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');		
+		if ($cargar->validar()) {			
+			if($cargar->upload()) {
+				echo $cargar->getSuccess();
+			} else {
+				echo $cargar->getErrors();
+			}
+		} else {
+			echo $cargar->getErrors();
+		}
 	} catch (RuntimeException $e) {
 		echo json_encode(array("errors" => $e->getMessage()));
 	}

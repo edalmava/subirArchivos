@@ -1,22 +1,28 @@
 <?php
 	/**
+	 * Clase CargarArchivo
+	 *
+	 * Permite subir archivos(upload)
+	 *
 	 * @package CargarArchivo
 	 * @author  edalmava
-	 * @version v0.1 28-08-2015 14:53:00
+	 * @version v0.2 31-08-2015 11:55:00
 	 */
 	class CargarArchivo {		
-		private $file;
 		private $multiple;
 		private $size;
 		private $ext;
 		private $overwrite;
-		private $uploaddir = '../uploads/';
-		private $errors;
-		private $success;
+		
+		protected $file;
+		protected $uploaddir = '../uploads/';
+		protected $validate;
+		protected $errors;
+		protected $success;
 		
 		// Media Types
 		// http://www.iana.org/assignments/media-types/media-types.xhtml#application
-		private $ext_permitidas = array('avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
+		public $ext_permitidas = array('avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
 										'bmp' => 'image/bmp',
 										'css' => 'text/css',
 										'csv' => 'text/csv',
@@ -40,6 +46,17 @@
 										'zip' => 'application/zip'										
 									   );
 		
+		/**
+		 * Constructor
+		 *
+		 * Inicializa propiedades
+		 *		 
+		 * @param string $file Nombre del campo tipo file del formulario enviado
+		 * @param '0' | '1' $multiple Subida  de múltiples archivos
+		 * @param integer $size_max Tamaño máximo del archivo o archivos subidos
+		 * @param string $ext Extensiones permitidas separadas por comas
+		 * @param '0' | '1' $overwrite Sobreescribir el archivo en el momento de moverlo
+		 */
 		function __construct($file = '', $multiple = '0', $size_max = 2048, $ext, $overwrite = '1') {			
 			$this->file = $file;			
 			$this->multiple = $multiple;
@@ -48,7 +65,16 @@
 			$this->overwrite = $overwrite;			
 		}
 		
-		function verificarPropiedades() {
+		/**
+		 * Función verificar propiedades
+		 *
+		 * Función que permite verificar si las propiedades inicializadas en el constructor son válidas
+		 *
+		 * @param void
+		 *
+		 * @return void
+		 */
+		protected function verificarPropiedades() {
 			if (empty($this->file)) {
 				$this->file = 'userfile';
 			}
@@ -64,7 +90,16 @@
             $this->validarExtensiones($this->ext);
 		}
 		
-		function validarExtensiones() {
+		/**
+		 * Función validar extensiones
+		 *
+		 * Función que permite validar si las extensiones pasadas por el constructor estan permitidas
+		 * 
+		 * @param void
+		 *
+		 * @return void | RuntimeException
+		 */
+		protected function validarExtensiones() {
 			$exts = explode(",", str_replace(' ', '', $this->ext));
 			$ext_permitidas = array_keys($this->ext_permitidas);
 			foreach ($exts as $ext) {
@@ -76,10 +111,15 @@
 		}		
 		
 		/**
-		 * @param  integer 
-         * @return true|error
+		 * Función para validar los códigos de error
+		 *
+		 * Función que permite verificar si el archivo fue subido exitosamente o ha ocurrido un error
+		 *
+		 * @param  integer Código de error 
+         * 		 
+         * @return true|false 
 		 */
-		function checkError($error) {
+		protected function checkError($error) {
 			switch ($error) {
 				case UPLOAD_ERR_OK:
 					break;
@@ -104,7 +144,16 @@
 			return true;
 		}
 		
-		function checkSizeMax($fileSize) {
+		/**
+		 * Función para validar el tamaño máximo
+		 *
+		 * Función que permite verificar si el archivo tiene un tamaño inferior al tamaño máximo permitido
+		 *
+		 * @param  integer Tamaño máximo del archivo 
+         * 		 
+         * @return true|false 
+		 */		
+		protected function checkSizeMax($fileSize) {
 			if ($fileSize > ($this->size * 1024)) {
 				//throw new RuntimeException('Tamaño del archivo excede el límite.');
 				$this->errors[] = 'Tamaño del archivo excede el límite.';
@@ -114,7 +163,7 @@
 			}
 		}
 		
-		function getTipos() {			
+		protected function getTipos() {			
 			$tipos = array();
 			foreach ($this->ext as $ext) {
 				if (is_array($this->ext_permitidas[$ext])) {
@@ -128,7 +177,7 @@
 			return $tipos;
 		}
 		
-		function checkMime($finfo, $fileTmp) {
+		protected function checkMime($finfo, $fileTmp) {
 			$tipos = $this->getTipos();
             $keys = array_keys($tipos);
             if (in_array($finfo->file($fileTmp), $keys)) {
@@ -155,78 +204,103 @@
 			}
         }*/			
 		
-		function isSimple() {			
+		protected function isSimple() {			
 			return (isset($_FILES[$this->file]['error']) && !is_array($_FILES[$this->file]['error']) && !$this->multiple)?true:false;                
 		}
 		
-		function isArray() {
+		protected function isArray() {
 			return (isset($_FILES[$this->file]['error']) && is_array($_FILES[$this->file]['error']) && $this->multiple)?true:false;
 		}
 		
-		function subirArchivo($ext) {
-			$nombre = sprintf('%s.%s', sha1_file($_FILES[$this->file]['tmp_name']), $ext);
+		protected function subirArchivo($nameFile, $ext) {
+			$nombre = sprintf('%s.%s', sha1_file($nameFile), $ext);
 			if (!$this->overwrite) {
-				$nombre = sprintf('%s.%s', sha1($_FILES[$this->file]['tmp_name'] . date('YmdHis')), $ext);
+				$nombre = sprintf('%s.%s', sha1($nameFile . date('YmdHis')), $ext);
 			}
-			if (!move_uploaded_file($_FILES[$this->file]['tmp_name'], sprintf('%s%s', $this->uploaddir, $nombre))) {
+			if (!move_uploaded_file($nameFile, sprintf('%s%s', $this->uploaddir, $nombre))) {
 				//throw new RuntimeException('Fallo al mover el archivo subido.');
 				$this->errors[] = 'Fallo al mover el archivo subido.';
 				return false;
-			} else {
-				//return json_encode(array("success" => "Archivo fue subido exitosamente.", "nombre" => $nombre));
-				$this->success = array("success" => "Archivo fue subido exitosamente.", "nombre" => $nombre);
-				return true;
+			} else {				
+				return $nombre;
 			}
 		}
 		
-		function subidaMultiple($exts) {
+		protected function subidaMultiple($exts) {
 			$nombres = array();
-			foreach ($_FILES[$this->file]['tmp_name'] as $key => $name) {
-				$nombre = sprintf('%s.%s', sha1_file($name), $exts[$key]);
-				if (!$this->overwrite) {
-					$nombre = sprintf('%s.%s', sha1($name . date('YmdHis')), $exts[$key]);
-				}
-				if (!move_uploaded_file($name, sprintf('%s%s', $this->uploaddir, $nombre))) {
-					//throw new RuntimeException('Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key]);
+			foreach ($_FILES[$this->file]['tmp_name'] as $key => $name) {				
+				if ($nombre = $this->subirArchivo($name, $exts[$key])) {
+					$nombres[$key] = $nombre;
+				} else {
 					$this->errors[] = 'Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key];
 					//$this->eliminarArchivos();
 					return false;
-				} 
-				$nombres[$key] = $nombre;
+				}				
 			}
-			$this->success = array("success" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres);
+			$this->success = array("msg" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres);
 			return true;
 		}
 		
-		function cargar() {						
+		protected function cargar() {            		
+			$finfo = new finfo(FILEINFO_MIME_TYPE);
+			if ($this->isSimple()) {
+				$ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name']);					
+				if ($nombre = $this->subirArchivo($_FILES[$this->file]['tmp_name'], $ext)) {
+					$this->success = array("msg" => "Archivo fue subido exitosamente.", "nombre" => $nombre);
+					return true;
+				} else {
+					return false;
+				}				
+			} else if ($this->isArray()) {
+				$exts = array();					
+				foreach ($_FILES[$this->file]['error'] as $key => $error) {											
+					$exts[$key] = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'][$key]);									
+				}
+				return ($this->subidaMultiple($exts))?true:false;					
+			} 				
+		}  
+		
+		public function validar() {
 			$this->verificarPropiedades();
 			$finfo = new finfo(FILEINFO_MIME_TYPE);
 			if ($this->isSimple()) {
-				if ($this->checkError($_FILES[$this->file]['error']) && $this->checkSizeMax($_FILES[$this->file]['size']) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'])) {						
-					if ($this->subirArchivo($ext)) {
-						return $this->success;
-					} else {
-						return $this->errors;
-					}
+				if ($this->checkError($_FILES[$this->file]['error']) && $this->checkSizeMax($_FILES[$this->file]['size']) && $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'])) {						
+				    $this->validate = true;
+					return true;
 				} else {
-					return $this->errors;
+					$this->validate = false;
+					return false;
 				}
 			} else if ($this->isArray()) {
-				$exts = array();					
 				foreach ($_FILES[$this->file]['error'] as $key => $error) {
-					if ($this->checkError($_FILES[$this->file]['error'][$key]) && $this->checkSizeMax($_FILES[$this->file]['size'][$key]) && $ext = $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'][$key])) {						
-						$exts[$key] = $ext;
+					if ($this->checkError($_FILES[$this->file]['error'][$key]) && $this->checkSizeMax($_FILES[$this->file]['size'][$key]) && $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'][$key])) {						
+						continue;
 					} else {
-						return $this->errors;
-                    }						
+						$this->validate = false;
+						return false;
+                    }	
 				}
-				if ($this->subidaMultiple($exts)) {
-					return $this->success;
-                } else {
-					return $this->errors;
-                }					
+				$this->validate = true;
+				return true;
 			} else {
+                $this->validate = false;				
 				throw new RuntimeException('Error al cargar: Parametros inválidos');
-			}			
-		}  
+			}		
+		}
+		
+		public function upload() {
+			if ($this->validate) {
+				return ($this->cargar())?true:false; 				 
+			} else {
+				return ($this->validar())?($this->cargar()):false; 				
+			}
+		}
+		
+		public function getErrors() {
+			return json_encode(array("errors" => $this->errors));
+		}
+		
+		public function getSuccess() {
+			return json_encode(array("success" => $this->success));
+		}		
 	}
