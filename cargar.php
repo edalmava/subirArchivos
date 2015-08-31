@@ -5,6 +5,15 @@
 	
 	require('lib/cargar_archivo.php');
 	
+	/**
+	 * Clase Json
+	 *
+	 * Permite gestionar la representación en formato JSON de los mensajes de error y éxito
+	 *
+	 * @package Json
+	 * @author  edalmava
+	 * @version v0.2 31-08-2015 15:35:00
+	 */
 	class Json {		
 		public static function setErrors($errors) {			
 			return json_encode(array("errors" => $errors));
@@ -16,8 +25,8 @@
 	}
 	
 	try {
-		$cargar = new CargarArchivo("archivos", 1, 100, 'jpg', '0');		
-		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');		
+		$cargar = new CargarArchivo("archivos", 1, 100, 'png,jpg,gif', '0'); // Ejemplo de subida múltiple sin sobreescritura	
+		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');		     // Ejemplo de subida de un solo archivo con sobreescritura
 		if ($cargar->validar()) {			
 			if($cargar->upload()) {
 				echo Json::setSuccess($cargar->getSuccess());

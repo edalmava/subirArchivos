@@ -4,14 +4,21 @@
   <meta charset="utf-8">
   <title>JS Bin</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <style>
+    input[type="file"] {
+	  /*display:none;	  */
+	}
+  </style>
 </head>
 <body>
 <!-- TODO: Se necesita asegurar que el formulario no intenta cargar más archivos que max_file_uploads en una petición. 	 -->
 <!-- TODO: Drag and Drop - https://developer.mozilla.org/es/docs/Using_files_from_web_applications --> 
 <form enctype="multipart/form-data" method="post" id="fileinfo">
 <input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
-<input type="file" id="archivos" name="archivos[]" multiple onchange="readImagesAndPreview(this.files);"><p>
-<input type="file" id="archivos2" name="archivos2" multiple onchange="readImagesAndPreview(this.files);"><p>
+<input type="file" id="archivos" name="archivos[]" multiple onchange="readImagesAndPreview(this.files);">
+<input type="file" id="archivos2" name="archivos2" onchange="readImagesAndPreview(this.files);">
+<button id="um">Subida Múltiple</button>
+<button id="us">Subida Simple</button>
 <input type="button" value="Enviar" onclick="presionar()" />
 </form>
   <div id="thumbnails"></div>
@@ -19,9 +26,9 @@
   <script>
     var container = document.getElementById("thumbnails");	
     
-    function readImagesAndPreview(files) {
-      for(var i=0; i < files.length; i++) {
-         var f = files[i];         
+    function readImagesAndPreview(fileList) {	  
+      for(var i=0; i < fileList.length; i++) {
+         var f = fileList[i];         
          var reader = new FileReader();
         
          reader.onload = function(e) {
@@ -62,6 +69,25 @@
 		});
 	}
     
+	window.onload = function() {
+	    var bum = document.querySelector('#um');
+		var bus = document.querySelector('#us');
+		
+		var fum = document.querySelector("#archivos");
+		var fus = document.querySelector("#archivos2");
+		
+		bum.addEventListener('click', function() {		    
+			fum.click();			
+		});
+		
+		bus.addEventListener('click', function() {
+		    fus.click();			
+		});
+		
+		fum.addEventListener('change', function() { alert('OK'); });
+		
+		fus.addEventListener('change', function() { alert('OK'); });
+	}
   </script>
 </body>
 </html>

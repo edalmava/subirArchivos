@@ -2,48 +2,55 @@
 	/**
 	 * Clase CargarArchivo
 	 *
-	 * Permite subir archivos(upload)
+	 * Permite gestionar la subida de archivos al servidor(upload)
 	 *
 	 * @package CargarArchivo
 	 * @author  edalmava
 	 * @version v0.2 31-08-2015 11:55:00
 	 */
-	class CargarArchivo {		
-		private $multiple;
-		private $size;
-		private $ext;
-		private $overwrite;
+	class CargarArchivo {
+        /**
+         * @var '0' | '1' $multiple   Subida de múltiples archivos
+		 * @var integer   $size_max   Tamaño máximo del archivo o archivos subidos(en KB)
+		 * @var string    $ext        Extensiones permitidas separadas por comas
+		 * @var '0' | '1' $overwrite  Sobreescribir el archivo en el momento de moverlo
+         * @var string    $file       Nombre del campo tipo file del formulario enviado
+		 * @var boolean   $validate   Para saber si se ha validado la subida
+		 * @var array     $errors     Errores en la subida
+		 * @var array     $success    Éxito en la subida
+		 * @var string    $uploaddir  Ruta al directorio de subida
+		 * @var array $ext_permitidas Listado de extensiones permitidas y sus correspondientes tipos MIME
+		 */		
+		private $multiple, $size, $ext, $overwrite;
 		
-		protected $file;
 		protected $uploaddir = '../uploads/';
-		protected $validate;
-		protected $errors;
-		protected $success;
+		protected $file, $validate, $errors, $success;
 		
 		// Media Types
 		// http://www.iana.org/assignments/media-types/media-types.xhtml#application
-		public $ext_permitidas = array('avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
-										'bmp' => 'image/bmp',
-										'css' => 'text/css',
-										'csv' => 'text/csv',
-										'html'=> 'text/html',
-										'js'  => 'application/javascript',
-										'doc' => 'application/msword',
-										'docx'=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-										'ppt' => 'application/vnd.ms-powerpoint',
-										'pptx'=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-										'xls' => 'application/vnd.ms-excel',
-										'xlsx'=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-										'pdf' => 'application/pdf',
-										'jpg' => array('image/jpeg', 'image/jpg'), 
-		                                'png' => 'image/png', 
-										'gif' => 'image/gif',
-										'mp3' => 'audio/mpeg',
-										'mp4' => array('audio/mp4', 'video/mp4'),
-										'mpeg'=> array('audio/mpeg', 'video/mpeg'),
-										'ogg' => array('audio/vorbis', 'application/ogg', 'audio/ogg', 'video/ogg'),
-										'xml' => 'application/xml',
-										'zip' => 'application/zip'										
+		public $ext_permitidas = array(
+									'avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
+									'bmp' => 'image/bmp',
+									'css' => 'text/css',
+									'csv' => 'text/csv',
+									'html'=> 'text/html',
+									'js'  => 'application/javascript',
+									'doc' => 'application/msword',
+									'docx'=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+									'ppt' => 'application/vnd.ms-powerpoint',
+									'pptx'=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+									'xls' => 'application/vnd.ms-excel',
+									'xlsx'=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+									'pdf' => 'application/pdf',
+									'jpg' => array('image/jpeg', 'image/jpg'), 
+									'png' => 'image/png', 
+									'gif' => 'image/gif',
+									'mp3' => 'audio/mpeg',
+									'mp4' => array('audio/mp4', 'video/mp4'),
+									'mpeg'=> array('audio/mpeg', 'video/mpeg'),
+									'ogg' => array('audio/vorbis', 'application/ogg', 'audio/ogg', 'video/ogg'),
+									'xml' => 'application/xml',
+									'zip' => 'application/zip'										
 									   );
 		
 		/**
@@ -51,11 +58,11 @@
 		 *
 		 * Inicializa propiedades
 		 *		 
-		 * @param string $file Nombre del campo tipo file del formulario enviado
-		 * @param '0' | '1' $multiple Subida  de múltiples archivos
-		 * @param integer $size_max Tamaño máximo del archivo o archivos subidos
-		 * @param string $ext Extensiones permitidas separadas por comas
-		 * @param '0' | '1' $overwrite Sobreescribir el archivo en el momento de moverlo
+		 * @param string    $file      Nombre del campo tipo file del formulario enviado.  Por defecto se toma 'userfile'
+		 * @param '0' | '1' $multiple  Subida de múltiples archivos.  Por defecto es '0' solo se permite subir un único archivo
+		 * @param integer   $size_max  Tamaño máximo del archivo o archivos subidos(en KB).  Por defecto es 2048 (2MB)
+		 * @param string    $ext       Extensiones permitidas separadas por comas con o sin espacios.  Por ejemplo: 'gif, jpg, png'
+		 * @param '0' | '1' $overwrite Sobreescribir el archivo en el momento de moverlo.  Por defecto es '1' se sobreescribe el archivo
 		 */
 		function __construct($file = '', $multiple = '0', $size_max = 2048, $ext, $overwrite = '1') {			
 			$this->file = $file;			
@@ -68,11 +75,13 @@
 		/**
 		 * Función verificar propiedades
 		 *
-		 * Función que permite verificar si las propiedades inicializadas en el constructor son válidas
+		 * Función que permite verificar si las propiedades inicializadas en el constructor son válidas 
+		 * en caso negativo se inicializan correctamente a sus valores por defecto excepto las extensiones donde
+		 * se genera un excepción
 		 *
 		 * @param void
 		 *
-		 * @return void
+		 * @return void | RuntimeException
 		 */
 		protected function verificarPropiedades() {
 			if (empty($this->file)) {
@@ -115,7 +124,7 @@
 		 *
 		 * Función que permite verificar si el archivo fue subido exitosamente o ha ocurrido un error
 		 *
-		 * @param  integer Código de error 
+		 * @param  integer $error Código de error del archivo subido
          * 		 
          * @return true|false 
 		 */
@@ -123,21 +132,17 @@
 			switch ($error) {
 				case UPLOAD_ERR_OK:
 					break;
-				case UPLOAD_ERR_NO_FILE:
-					//throw new RuntimeException('No se ha enviado ningún archivo');
+				case UPLOAD_ERR_NO_FILE:					
 					$this->errors[] = 'No se ha enviado ningún archivo.';
 					return false;
 				case UPLOAD_ERR_INI_SIZE:
-				case UPLOAD_ERR_FORM_SIZE:
-					//throw new RuntimeException('Tamaño del archivo excede el límite.');
+				case UPLOAD_ERR_FORM_SIZE:					
 					$this->errors[] = 'Tamaño del archivo excede el límite.';
 					return false;
-				case UPLOAD_ERR_PARTIAL:
-				    //throw new RuntimeException('El archivo subido fue sólo parcialmente cargado.');
+				case UPLOAD_ERR_PARTIAL:				    
 					$this->errors[] = 'El archivo subido fue sólo parcialmente cargado.';
 					return false;
-				default:
-					//throw new RuntimeException('Error desconocido.');
+				default:					
 					$this->errors[] = 'Error desconocido.';
 					return false;
 			}
@@ -147,15 +152,14 @@
 		/**
 		 * Función para validar el tamaño máximo
 		 *
-		 * Función que permite verificar si el archivo tiene un tamaño inferior al tamaño máximo permitido
+		 * Función que permite verificar si el archivo tiene un tamaño inferior al tamaño dado por la propiedad $size
 		 *
-		 * @param  integer Tamaño máximo del archivo 
+		 * @param  integer $fileSize Tamaño del archivo subido
          * 		 
          * @return true|false 
 		 */		
 		protected function checkSizeMax($fileSize) {
-			if ($fileSize > ($this->size * 1024)) {
-				//throw new RuntimeException('Tamaño del archivo excede el límite.');
+			if ($fileSize > ($this->size * 1024)) {				
 				$this->errors[] = 'Tamaño del archivo excede el límite.';
 				return false;
 			} else {
@@ -177,13 +181,22 @@
 			return $tipos;
 		}
 		
+		/**
+		 * Función para validar el tipo mime
+		 *
+		 * Función que permite verificar si el archivo tiene un tipo MIME permitido en cuyo caso retorna la extensión
+		 * del mismo que será utilizada en caso de mover el archivo
+		 *
+		 * @param string $fileTmp Nombre temporal del archivo
+         * 		 
+         * @return $ext | false   Retorna la extensión del archivo o false
+		 */		
 		protected function checkMime($finfo, $fileTmp) {
 			$tipos = $this->getTipos();
             $keys = array_keys($tipos);
             if (in_array($finfo->file($fileTmp), $keys)) {
 				return $tipos[$finfo->file($fileTmp)];
-            } else {
-				//throw new RuntimeException('Formato de archivo inválido.');
+            } else {				
 				$this->errors[] = 'Formato de archivo inválido.';
 				return false;
             }										
@@ -204,10 +217,24 @@
 			}
         }*/			
 		
+		/**
+		 * Función para validar si es subida de un solo archivo
+		 *		
+		 * @param void
+         * 		 
+         * @return true | false 
+		 */		
 		protected function isSimple() {			
 			return (isset($_FILES[$this->file]['error']) && !is_array($_FILES[$this->file]['error']) && !$this->multiple)?true:false;                
 		}
 		
+		/**
+		 * Función para validar si es subida de múltiples archivos
+		 *		
+		 * @param void
+         * 		 
+         * @return true | false 
+		 */		
 		protected function isArray() {
 			return (isset($_FILES[$this->file]['error']) && is_array($_FILES[$this->file]['error']) && $this->multiple)?true:false;
 		}
@@ -217,8 +244,7 @@
 			if (!$this->overwrite) {
 				$nombre = sprintf('%s.%s', sha1($nameFile . date('YmdHis')), $ext);
 			}
-			if (!move_uploaded_file($nameFile, sprintf('%s%s', $this->uploaddir, $nombre))) {
-				//throw new RuntimeException('Fallo al mover el archivo subido.');
+			if (!move_uploaded_file($nameFile, sprintf('%s%s', $this->uploaddir, $nombre))) {				
 				$this->errors[] = 'Fallo al mover el archivo subido.';
 				return false;
 			} else {				
