@@ -30,7 +30,7 @@
 		// http://www.iana.org/assignments/media-types/media-types.xhtml#application
 		public $ext_permitidas = array(
 									'avi' => array('video/msvideo', 'video/avi', 'video/x-msvideo'),
-									'bmp' => 'image/bmp',
+									'bmp' => 'image/bmp',									
 									'css' => 'text/css',
 									'csv' => 'text/csv',
 									'html'=> 'text/html',
@@ -328,5 +328,16 @@
 		
 		public function getSuccess() {
 			return $this->success;
-		}		
+		}
+
+        public static function getConfiguracion() {
+			$conf = array();
+			$conf['file_uploads'] = ini_get('file_uploads');
+			$conf['upload_tmp_dir'] = ini_get('upload_tmp_dir');
+			$conf['max_input_vars'] = ini_get('max_input_vars');
+			$conf['upload_max_filesize'] = ini_get('upload_max_filesize');
+			$conf['max_file_uploads'] = ini_get('max_file_uploads');
+			
+			return json_encode($conf);
+        }			
 	}
