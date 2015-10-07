@@ -30,11 +30,11 @@
     /**
 	   * @var string $uploaddir Ruta al directorio de subida
      */
-	  public setUploadDir($uploaddir) {
+	  public function setUploadDir($uploaddir) {
 	    $this->uploaddir = $uploaddir;
 	  }
 
-		public getUploadDir() {
+		public function getUploadDir() {
 			return $this->uploaddir;
 		}
 
