@@ -251,10 +251,11 @@
 			return (isset($_FILES[$this->file]['error']) && is_array($_FILES[$this->file]['error']) && $this->multiple)?true:false;
 		}
 
-		protected function subirArchivo($nameFile, $ext) {
-			$nombre = sprintf('%s.%s', sha1_file($nameFile), $ext);
+		protected function subirArchivo($nameFile, $ext) {			
 			if (!$this->overwrite) {
 				$nombre = sprintf('%s.%s', sha1($nameFile . date('YmdHis')), $ext);
+			} else {
+				$nombre = sprintf('%s.%s', sha1_file($nameFile), $ext);
 			}
 			if (!move_uploaded_file($nameFile, sprintf('%s%s', $this->uploaddir, $nombre))) {
 				$this->errors[] = 'Fallo al mover el archivo subido.';
