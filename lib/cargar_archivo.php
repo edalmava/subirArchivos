@@ -334,6 +334,19 @@
 				return ($this->validar())?($this->cargar()):false;
 			}
 		}
+		
+		public function eliminarArchivo($file) {
+			$nameFile = sprintf('%s%s%s', '/home/ubuntu/workspace/', $this->uploaddir, $file);
+			if (is_file($nameFile)) {
+				if (unlink($nameFile)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
 
 		public function getErrors() {
 			return $this->errors;

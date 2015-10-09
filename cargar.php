@@ -31,6 +31,7 @@
 
 		if ($cargar->validar()) {
 			if($cargar->upload()) {
+				//if ($cargar->eliminarArchivo($cargar->getSuccess()['nombre'])) {				
 				echo Json::setSuccess($cargar->getSuccess());
 			} else {
 				echo Json::setErrors($cargar->getErrors());
