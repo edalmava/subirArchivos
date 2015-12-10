@@ -10,18 +10,19 @@
 	 */
 	class CargarArchivo {
         /**
-         * @var '0' | '1' $multiple   Subida de múltiples archivos
-		 * @var integer   $size_max   Tamaño máximo del archivo o archivos subidos(en KB)
-		 * @var string    $ext        Extensiones permitidas separadas por comas
-		 * @var '0' | '1' $overwrite  Sobreescribir el archivo en el momento de moverlo
-         * @var string    $file       Nombre del campo tipo file del formulario enviado
-		 * @var boolean   $validate   Para saber si se ha validado la subida
-		 * @var array     $errors     Errores en la subida
-		 * @var array     $success    Éxito en la subida
-		 * @var string    $uploaddir  Ruta al directorio de subida
+         * @var '0' | '1' $multiple    Subida de múltiples archivos
+		 * @var integer   $size_max    Tamaño máximo del archivo o archivos subidos(en KB)
+		 * @var string    $ext         Extensiones permitidas separadas por comas
+		 * @var '0' | '1' $overwrite   Sobreescribir el archivo en el momento de moverlo
+         * @var string    $file        Nombre del campo tipo file del formulario enviado
+		 * @var boolean   $validate    Para saber si se ha validado la subida
+		 * @var array     $errors      Errores en la subida
+		 * @var array     $success     Éxito en la subida
+		 * @var string    $uploaddir   Ruta al directorio de subida
+		 * @var '0' | '1' $obligatorio Si es o no obligatorio subir un archivo.  Por defecto es obligatorio
 		 * @var array $ext_permitidas Listado de extensiones permitidas y sus correspondientes tipos MIME
 		 */
-		private $multiple, $size, $ext, $overwrite;
+		private $multiple, $size, $ext, $overwrite, $obligatorio;
 
 		//protected $uploaddir = '../uploads/';
 		protected $uploaddir;
@@ -76,12 +77,13 @@
 		 * @param string    $ext       Extensiones permitidas separadas por comas con o sin espacios.  Por ejemplo: 'gif, jpg, png'
 		 * @param '0' | '1' $overwrite Sobreescribir el archivo en el momento de moverlo.  Por defecto es '1' se sobreescribe el archivo
 		 */
-		function __construct($file = '', $multiple = '0', $size_max = 2048, $ext, $overwrite = '1') {
+		function __construct($file = '', $multiple = '0', $size_max = 2048, $ext, $overwrite = '1', $obligatorio = '1') {
 			$this->file = $file;
 			$this->multiple = $multiple;
 			$this->size = $size_max;
 			$this->ext = $ext;
 			$this->overwrite = $overwrite;
+			$this->obligatorio = $obligatorio;
 		}
 
 		/**
@@ -108,6 +110,9 @@
             if (!in_array($this->overwrite, array('0', '1'))) {
 				$this->overwrite = '1';
             }
+			if (!in_array($this->obligatorio, array('0', '1'))) {
+				$this->obligatorio = '1';
+			}
             $this->validarExtensiones($this->ext);
 		}
 
@@ -301,6 +306,16 @@
 
 		public function validar() {
 			$this->verificarPropiedades();
+			if ($this->obligatorio && $_FILES[$this->file]['error'] == UPLOAD_ERR_NO_FILE) {
+				$this->validate = false;
+				$this->errors[] = "No se ha enviado ningún archivo.";
+				return false;
+			}
+			if (!$this->obligatorio && $_FILES[$this->file]['error'] == UPLOAD_ERR_NO_FILE) {
+				$this->validate = true;	
+                $this->success = array("msg" => "", "nombre" => "");				
+				return true;
+			}
 			$finfo = new finfo(FILEINFO_MIME_TYPE);
 			if ($this->isSimple()) {
 				if ($this->checkError($_FILES[$this->file]['error']) && $this->checkSizeMax($_FILES[$this->file]['size']) && $this->checkMime($finfo, $_FILES[$this->file]['tmp_name'])) {
@@ -328,6 +343,11 @@
 		}
 
 		public function upload() {
+			if (!$this->obligatorio && $_FILES[$this->file]['error'] == UPLOAD_ERR_NO_FILE) {
+				$this->validate = true;	
+                $this->success = array("msg" => "", "nombre" => "");				
+				return true;
+			}
 			if ($this->validate) {
 				return ($this->cargar())?true:false;
 			} else {
