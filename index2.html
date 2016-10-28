@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="Styles/bootstrap.min.css">
   <link rel="stylesheet" href="Styles/bootstrap-theme.min.css">    
   <style>    
-    input[type="file"] {
+    body { padding-top: 80px; }	
+	input[type="file"] {
 	    display:none;
 	}
 	#thumbnails {
@@ -31,6 +32,9 @@
 </head>
 <body>
 <div class="container-fluid">
+  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <h1 class="navbar-text navbar-left h1">Subida de Archivos</h1>	
+  </nav>
   <div class="row">
     <div class="col-md-12">
 	  <button id="cargarForm" class="btn btn-info">Cargar Form</button>
@@ -51,7 +55,7 @@
 				   method: "POST",
 				   success: function(data) {
 					 $('#formulario').html(data);  
-					 upload.init();
+					 upload.init();					 
 				   },
 				   error: function() {
 					   // Si ocurre un error
@@ -83,22 +87,27 @@
 		   }).bind(this));
 		   
 		   this.fum.addEventListener("change", (function() { 
-		       this.readImagesAndPreview(this.fum.files); 
+		       this.readImagesAndPreview(this.fum.files); 			   
 		   }).bind(this), false);
 	   }
 
        Upload.prototype.readImagesAndPreview = function(fileList) {		   
 		   var container = document.querySelector("#thumbnails");
-		   for(var i=0; i < fileList.length; i++) {
+		   for (var i = 0; i < fileList.length; i++) {
 			 var f = fileList[i];         
 			 var reader = new FileReader();
 			
-			 reader.onload = function(e) {
+			 reader.onload = function(e) {			   
 			   var img = document.createElement("img");		
 			   img.src = e.target.result;
 			   img.width = 100;
 			   img.height = 100;
+			   img.setAttribute("data-toggle", "tooltip");
+			   img.setAttribute("data-placement", "right");
+               img.setAttribute("title", "OK...");
+               			   
 			   container.appendChild(img);
+			   $('[data-toggle="tooltip"]').tooltip();
 			}
 		  
 			reader.readAsDataURL(f);
@@ -128,10 +137,11 @@
 
        return {
 		   init: function() {			   
-			   return new Upload();			   
+			   console.log("Iniciando Upload...");
+			   return new Upload();	              			   
 		   }
 	   }	   
-	})();	
+	})();   	
 </script> 
 <script src="Scripts/jquery-2.1.4.min.js"></script>  
 <script src="Scripts/bootstrap.min.js"></script>  
