@@ -26,7 +26,7 @@
 
 		//protected $uploaddir = '../uploads/';
 		protected $uploaddir;
-		protected $file, $validate, $errors, $success;
+		protected $file, $validate, $errors, $success, $tipoMime;
 
     /**
 	   * @var string $uploaddir Ruta al directorio de subida
@@ -211,6 +211,7 @@
 		protected function checkMime($finfo, $fileTmp) {
 			$tipos = $this->getTipos();
             $keys = array_keys($tipos);
+			$this->tipoMime = $finfo->file($fileTmp);
             if (in_array($finfo->file($fileTmp), $keys)) {
 				return $tipos[$finfo->file($fileTmp)];
             } else {
@@ -272,16 +273,18 @@
 
 		protected function subidaMultiple($exts) {
 			$nombres = array();
+			$nombres2 = array();
 			foreach ($_FILES[$this->file]['tmp_name'] as $key => $name) {
 				if ($nombre = $this->subirArchivo($name, $exts[$key])) {
 					$nombres[$key] = $nombre;
+					$nombres2[$key] = $_FILES[$this->file]['name'][$key];
 				} else {
 					$this->errors[] = 'Fallo al mover el archivo subido: ' . $_FILES[$this->file]['name'][$key];
 					//$this->eliminarArchivos();
 					return false;
 				}
 			}
-			$this->success = array("msg" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres);
+			$this->success = array("msg" => "Archivos fueron subidos exitosamente.", "nombres" => $nombres, "nombres2" => $nombres2);
 			return true;
 		}
 

@@ -29,7 +29,7 @@
 <!-- TODO: Drag and Drop - https://developer.mozilla.org/es/docs/Using_files_from_web_applications --> 
 <div class="container">
   <form enctype="multipart/form-data" method="post" id="fileinfo" class="form-horizontal" role="form">
-	<input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
+	<input type="hidden" name="MAX_FILE_SIZE" value="4000000" />
 	<input type="file" id="archivos" name="archivos[]" multiple>
 	<input type="file" id="archivos2" name="archivos2">
 	<button id="um" class="btn btn-default">Subida Múltiple</button>
@@ -99,8 +99,8 @@
 			success: function(data) {
 			    
 			},
-			error: function() {
-			    alert("Ha ocurrido un error");
+			error: function(error) {
+			    alert("Ha ocurrido un error: " + error);
 			}
         });
         request.done(function( msg ) {

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">  
+  <title>JS Bin</title> 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u7" crossorigin="anonymous">
+  <style>    
+    input[type="file"] {
+	  display: none;
+	}
+	#dropbox {
+	  margin: 1em;
+	  padding: 5px;
+	  border: 1px solid #000;
+	  background-color: #EFEFEF;
+	  min-width: 200px;
+      min-height: 200px;
+	}
+	#thumbnails {
+	  margin: 0;
+	  padding: 1px;
+	  display: flex;
+	  flex-direction: row;
+	  flex-wrap: wrap;
+	  justify-content: flex-start;
+	}
+	#thumbnails figure {
+	  /*flex-grow: 1;*/
+	}
+	figcaption {
+	    word-wrap: break-word;
+	}
+  </style>  
+</head>
+<body>
+<form enctype="multipart/form-data" method="post" id="fileinfo">
+	<input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
+    <input type="file" id="archivos" multiple>		
+	<button id="um">Subida Múltiple</button>	
+	<input id="enviar" type="button" value="Enviar" />
+</form>
+
+<div class="container">
+  <div id="dropbox"><span>Área de Arrastrar y Soltar</span><div id="thumbnails"></div></div>
+</div>
+<div class="container">
+  <!--<div id="thumbnails"></div>-->
+</div>
+<script>
+    var container = document.querySelector("#thumbnails");	
+    var listaArchivos = [];	
+	
+	function eliminar(element) {	    
+		for (var i = 0; i < listaArchivos.length; i++) {
+		    if (element.file == listaArchivos[i]) {			    
+				listaArchivos.splice(i, 1);
+			}
+		}		
+		container.removeChild(element.parentElement);		
+	}
+	
+	function eliminarT() {
+	    listaArchivos = [];
+		var listaImg = document.querySelectorAll(".objimage");		
+		for (var i = 0; i < listaImg.length; i++) {
+		    container.removeChild(listaImg[i].parentElement);			
+		}
+	}
+    
+    function readImagesAndPreview(fileList) {	  
+      for(var i=0; i < fileList.length; i++) {
+         var f = fileList[i]; 
+		 listaArchivos.push(f);		 
+		 
+		 var imageType = /^image\//;
+		 
+		 var figura = document.createElement("figure");
+		 var tituloFigura = document.createElement("figcaption");
+		 var img = document.createElement("img");
+         tituloFigura.innerHTML = f.name + "<br>" + f.size + " bytes";
+         img.width = 100;
+	     img.height = 100;          
+	     figura.appendChild(img);
+	     figura.appendChild(tituloFigura);
+		 img.classList.add("objimage");
+		 img.setAttribute("onclick", "eliminar(this)");		
+	     container.appendChild(figura);  		 
+
+         if (imageType.test(f.type)) {			  
+			  img.file = f;		       
+			  
+		      var reader = new FileReader();
+			  reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result; }; })(img);
+			  reader.readAsDataURL(f);			
+		 } else {			   	   
+			   img.src = "file.png";			  
+		 }  
+
+         //figura.addEventListener("click", function );		 
+      }
+    }
+	
+	function dragenter(e) {
+	  e.stopPropagation();
+	  e.preventDefault();
+	}
+	function dragover(e) {
+	  e.stopPropagation();
+	  e.preventDefault();
+	}
+	function drop(e) {
+	  e.stopPropagation();
+	  e.preventDefault();
+	  var dt = e.dataTransfer;
+	  var files = dt.files;
+	  readImagesAndPreview(files);
+	}
+	
+	function presionar() {
+	    var fd = new FormData(document.querySelector("#fileinfo"));		
+		//var fd = new FormData();		
+        for (var i=0, len = listaArchivos.length; i < len; i++) {
+            fd.append('archivos[]', listaArchivos[i]); 
+        }		
+		var request = $.ajax({
+		    url: "cargar.php",
+            method: "POST",			
+            data: fd,
+			cache: false,
+            processData: false,  
+            contentType: false			
+        });
+        request.done(function(msg) {
+		    if (msg.errors) {
+			    console.log(msg.errors);
+			} 
+			if (msg.success) {
+			    console.log(msg.success.nombres2);
+				eliminarT();
+			}
+		});
+	}
+    
+	window.onload = function() {
+	    var bum = document.querySelector("#um");		
+		
+		var fum = document.querySelector("#archivos");		
+		
+		var enviar = document.querySelector("#enviar");
+		
+		var dropbox = document.querySelector("#dropbox");
+		dropbox.addEventListener("dragenter", dragenter, false);
+		dropbox.addEventListener("dragover", dragover, false);
+		dropbox.addEventListener("drop", drop, false);
+		
+		enviar.addEventListener("click", presionar, false);
+		
+		bum.addEventListener("click", function(e) {		    
+			e.preventDefault();
+			fum.click();			
+		});
+		
+		fum.addEventListener("change", function() { var files = this.files; readImagesAndPreview(files); }, false);		
+	}
+  </script>
+  <script src="Scripts/jquery-2.1.4.min.js"></script>  
+  <script src="Scripts/bootstrap.min.js"></script>
+</body>
+</html>
