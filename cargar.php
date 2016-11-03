@@ -25,7 +25,7 @@
 	}
 
 	try {
-		$cargar = new CargarArchivo("archivos", 1, 4000, 'png,jpg,gif', '0'); // Ejemplo de subida múltiple sin sobreescritura
+		$cargar = new CargarArchivo("archivos", 1, 4096, 'png,jpg,gif,pdf', '0'); // Ejemplo de subida múltiple sin sobreescritura
 		//$cargar = new CargarArchivo("archivos2", 0, 100, 'jpg');		     // Ejemplo de subida de un solo archivo con sobreescritura
     $cargar->setUploadDir('uploads/');
 

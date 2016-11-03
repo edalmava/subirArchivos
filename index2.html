@@ -94,23 +94,26 @@
        Upload.prototype.readImagesAndPreview = function(fileList) {		   
 		   var container = document.querySelector("#thumbnails");
 		   for (var i = 0; i < fileList.length; i++) {
-			 var f = fileList[i];         
-			 var reader = new FileReader();
-			
-			 reader.onload = function(e) {			   
-			   var img = document.createElement("img");		
-			   img.src = e.target.result;
-			   img.width = 100;
-			   img.height = 100;
-			   img.setAttribute("data-toggle", "tooltip");
-			   img.setAttribute("data-placement", "right");
-               img.setAttribute("title", "OK...");
-               			   
-			   container.appendChild(img);
-			   $('[data-toggle="tooltip"]').tooltip();
-			}
-		  
-			reader.readAsDataURL(f);
+			 var f = fileList[i];		 
+			 
+			 var img = document.createElement("img");		     
+		     img.width = 100;
+		     img.height = 100;
+		     img.setAttribute("data-toggle", "tooltip");
+		     img.setAttribute("data-placement", "right");
+		     img.setAttribute("title", "Archivo: " + f.name + "<br>Tamaño: " + f.size + " bytes<br>Tipo: " + f.type);					   
+		     container.appendChild(img);
+		     $('[data-toggle="tooltip"]').tooltip({html: true});
+			 
+			 var imageType = /^image\//;
+			 
+			 if (imageType.test(f.type)) {			  
+				 var reader = new FileReader();
+				 reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result; }; })(img);
+				 reader.readAsDataURL(f);			
+			 } else {			   	   
+				 img.src = "file.png";			  
+			 }  		 
 		  }
 	   }	   
   
@@ -124,10 +127,10 @@
                processData: false,  
                contentType: false,
 			   success: function(data) {
-			    
+			       console.log(data);
 			   },
-			   error: function() {
-			       // Si ocurre un error
+			   error: function(e) {
+			       console.log(e.responseText);
 			   }
            });
            request.done(function(msg) {
